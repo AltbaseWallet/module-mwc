@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "mwc",
+  "displayName": "MimbleWimbleCoin",
+  "version": "0.1.9",
+  "kind": "privacy",
+  "frontend": "frontend/index.ts",
+  "runtime": "runtime/index.cjs",
+  "nativeWallet": false,
+  "nativeNode": false,
+  "platforms": [
+    "windows-x64",
+    "linux-x64",
+    "macos-x64",
+    "macos-arm64"
+  ],
+  "generatedBinaries": false,
+  "referenceWallet": "6.0.1"
+}

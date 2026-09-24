@@ -43,7 +43,7 @@ const createRuntime=context=>{
     state.child.on('error',error=>{state.child._altbaseSpawnError=error.code||'spawn failed'});state.child.stdin.on('error',()=>{})
     state.child.stdin.end(mqs?password+'\n':undefined)
     state.rpc=(context.createOwnerRpc?context.createOwnerRpc(state.port,secret):new MwcOwnerRpc(state.port,secret))
-    await waitFor(()=>state.rpc.initialize(),state.child,mqs?90000:15000)
+    await waitFor(()=>state.rpc.initialize(),state.child,90000)
     state.token=await state.rpc.call('open_wallet',{name:null,password})
   }
   const prepare=async(state,mnemonic,password)=>{
@@ -53,7 +53,9 @@ const createRuntime=context=>{
     if(state.cancelled)throw new Error('Wallet locked')
     state.child=(context.spawn||spawn)(context.binary,['-t',state.dir,'-r',context.nodeUrl,'owner_api','--port',String(state.port)],{cwd:state.dir,stdio:'ignore',windowsHide:true,shell:false,env:{...process.env,TOKIO_WORKER_THREADS:'1',RAYON_NUM_THREADS:'1'}})
     state.child.on('error',error=>{state.child._altbaseSpawnError=error.code||'spawn failed'});state.rpc=(context.createOwnerRpc?context.createOwnerRpc(state.port,secret):new MwcOwnerRpc(state.port,secret))
-    await waitFor(()=>state.rpc.initialize(),state.child,15000)
+    // The reference wallet contacts its node before exposing the Owner API.
+    // A slow network or first start must not exhaust a 15-second local deadline.
+    await waitFor(()=>state.rpc.initialize(),state.child,90000)
     if(!fs.existsSync(path.join(state.dir,'wallet_data','wallet.seed')))await state.rpc.call('create_wallet',{name:null,mnemonic,mnemonic_length:mnemonic.split(' ').length===24?32:16,password})
     state.token=await state.rpc.call('open_wallet',{name:null,password})
     const address=await state.rpc.call('get_mqs_address',{token:state.token})
@@ -84,7 +86,7 @@ const createRuntime=context=>{
   }
   const derive=async({mnemonic})=>{
     const {id,password}=identity(mnemonic)
-    if(active?.id===id)return active.preparing
+    if(active?.id===id&&!active.error&&!active.scanError)return active.preparing
     const revision=++generation
     await stopActive()
     if(revision!==generation)throw new Error('Wallet was locked during restoration')

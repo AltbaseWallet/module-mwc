@@ -9,3 +9,5 @@ Transfers use mainnet MQS addresses. **Both wallets must be online for interacti
 Windows uses the source-owned `native/private_console.c` helper because the reference wallet's password reader requires a console input handle. The helper creates a private ConPTY, receives the password on stdin, discards console output, and ends its child with a Job Object. This requires Windows 10 version 1809 or later.
 
 Reference binaries and their Apache license are prepared by `scripts/prepare-coin-runtimes.cjs`. Profiles live under the application profile's `local-wallets/mwc` directory; do not delete them to recover from a temporary node outage.
+
+The local Owner API has a 90-second startup allowance, including the first restoration. Retrying a failed open or recovery scan reuses the encrypted profile. It does not recreate existing wallet data or retry a transfer.
